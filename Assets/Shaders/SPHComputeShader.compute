@@ -10,7 +10,6 @@ struct Particle
 	float2 velocity;
 	float2 acceleration;
 	float  density;
-	float  pressure;
 };
 
 cbuffer Constants
@@ -32,8 +31,8 @@ cbuffer Constants
 	float4 _WallNormals[4];
 }
 
-StructuredBuffer<Particle> _ParticlesRead;
-RWStructuredBuffer<Particle> _ParticlesWrite;
+StructuredBuffer<Particle> _ParticlesRead  : register(u0);;
+RWStructuredBuffer<Particle> _ParticlesWrite : register(t0);
 
 //--------------------------------------------------------------------------------------
 // Density Calculation

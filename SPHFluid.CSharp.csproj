@@ -64,9 +64,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\SPHParticleSystem.cs" />
+    <Compile Include="Assets\Scripts\SPHParticleSystemSharedMemory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\SPHComputeShader.compute" />
+    <None Include="Assets\Shaders\SPHComputeShaderSharedMemory.compute" />
     <None Include="Assets\Shaders\SPHRenderer.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />

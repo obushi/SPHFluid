@@ -213,14 +213,15 @@ MonoBehaviour:
   Mass: 0.0002
   EffectiveRadius: 0.012
   TimeStep: 0.005
-  ViscosityCoef: 0.08
-  ParticleRadius: 0.008
+  ViscosityCoef: 0.2
+  ParticleRadius: 0.002
   WallStiffness: 10000
   ParticleInitGap: 0.0045
+  Gravity: {x: 0, y: -9.8}
   MinBoundary: {x: 0, y: 0}
   MaxBoundary: {x: 3, y: 3}
   MinInitBoundary: {x: 0, y: 0}
-  MaxInitBoundary: {x: 0.5, y: 0.5}
+  MaxInitBoundary: {x: 0.5, y: 1}
 --- !u!4 &430502802
 Transform:
   m_ObjectHideFlags: 0

@@ -5,16 +5,23 @@
 		_MainTex("Texture", 2D) = "white" {}
 	}
 
-		CGINCLUDE
-#include "UnityCG.cginc"
+	CGINCLUDE
+	#include "UnityCG.cginc"
 
-		struct Particle
+	float3 HUEtoRGB(in float H)
+	{
+		float R = abs(H * 6 - 3) - 1;
+		float G = 2 - abs(H * 6 - 2);
+		float B = 2 - abs(H * 6 - 4);
+		return saturate(float3(R, G, B));
+	}
+
+	struct Particle
 	{
 		float2 position;
 		float2 velocity;
 		float2 acceleration;
 		float  density;
-		float  pressure;
 	};
 
 	struct v2g
@@ -57,7 +64,7 @@
 		v2g o;
 		o.position.xy = _ParticleBuffer[id].position;
 		o.position.z = _ParticleSize;
-		o.color = float4(0, 1, 0.5, 1);
+		o.color = float4(HUEtoRGB(smoothstep(0, 10, length(_ParticleBuffer[id].velocity))), 1);
 		return o;
 	}
 
@@ -85,22 +92,23 @@
 		//return float4(1, 1, 1, 1);
 		return tex2D(_ParticleTexture, i.texcoord.xy) * i.color;
 	}
-		ENDCG
 
-		SubShader
+	ENDCG
+
+	SubShader
 	{
 		Tags{ "Queue" = "Transparent" "RenderType" = "Transparent" "IgnoreProjector" = "True" }
 			Zwrite Off
-			Blend OneMinusDstColor One
+			Blend One One
 			Cull Off
 
-			Pass
+		Pass
 		{
 			CGPROGRAM
-#pragma target 5.0
-#pragma vertex vert
-#pragma geometry geom
-#pragma fragment frag
+			#pragma target 5.0
+			#pragma vertex vert
+			#pragma geometry geom
+			#pragma fragment frag
 			ENDCG
 		}
 	}

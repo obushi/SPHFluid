@@ -3,6 +3,7 @@
 #pragma kernel Integrate
 
 #include "UnityCG.cginc"
+#define BLOCK_SIZE 32
 
 struct Particle
 {
@@ -20,7 +21,7 @@ struct ParticleDensity
 	float  density;
 };
 
-cbuffer Constants : register(b0)
+cbuffer Constants : register( b0 )
 {
 	float  _RestDensity;
 	float  _PressureCoef;
@@ -30,6 +31,7 @@ cbuffer Constants : register(b0)
 	float  _Viscosity;
 	float  _WallStiffness;
 	float  _ParticleGap;
+	float4 _Gravity;
 	float2 _MinBoundary;
 	float2 _MaxBoundary;
 	int    _MaxParticles;
@@ -39,14 +41,14 @@ cbuffer Constants : register(b0)
 	float4 _WallNormals[4];
 }
 
-StructuredBuffer<Particle> _ParticlesRead : register(t0);
-RWStructuredBuffer<Particle> _ParticlesWrite : register(u0);
+StructuredBuffer<Particle> _ParticlesRead : register( t0 );
+RWStructuredBuffer<Particle> _ParticlesWrite : register( u0 );
 
-StructuredBuffer<ParticleDensity> _ParticlesDensityRead : register(t1);
-RWStructuredBuffer<ParticleDensity> _ParticlesDensityWrite : register(u0);
+StructuredBuffer<ParticleDensity> _ParticlesDensityRead : register( t1 );
+RWStructuredBuffer<ParticleDensity> _ParticlesDensityWrite : register( u0 );
 
-StructuredBuffer<ParticleForce> _ParticlesForceRead : register(t2);
-RWStructuredBuffer<ParticleForce> _ParticlesForceWrite : register(u0);
+StructuredBuffer<ParticleForce> _ParticlesForceRead : register( t2);
+RWStructuredBuffer<ParticleForce> _ParticlesForceWrite : register( u0 );
 
 //--------------------------------------------------------------------------------------
 // Density Calculation
@@ -62,24 +64,37 @@ float CalculateDensity(float r_sq)
 	return _Mass * _Poly6Kernel * (h_sq - r_sq) * (h_sq - r_sq) * (h_sq - r_sq);
 }
 
+groupshared float2 density_shared_pos[BLOCK_SIZE];
 [numthreads(32, 1, 1)]
-void Density(uint3 DTid : SV_DispatchThreadID)
+void Density(uint3 DTid : SV_DispatchThreadID, uint GI : SV_GroupIndex)
 {
 	const uint i = DTid.x;
 	const float h_sq = _EffectiveRadius * _EffectiveRadius;
 	float2 P_position = _ParticlesRead[i].position;
 	float density = 0;
 
-	for (uint j = 0; j < (uint)_MaxParticles; j++)
+	[loop]
+	for (uint blockID = 0; blockID < (uint)_MaxParticles; blockID += BLOCK_SIZE)
 	{
-		float2 N_position = _ParticlesRead[j].position;
-		float2 diff = N_position - P_position;
-		float r_sq = dot(diff, diff);
-		if (r_sq < h_sq)
+		// Cache a tile of particles to shared memory to increase IO efficiency
+		density_shared_pos[GI] = _ParticlesRead[blockID + GI].position;
+
+		GroupMemoryBarrierWithGroupSync();
+
+		for (uint tileID = 0; tileID < BLOCK_SIZE; tileID++)
 		{
-			density += CalculateDensity(r_sq);
+			float2 N_position = density_shared_pos[tileID];
+			float2 diff = N_position - P_position;
+			float r_sq = dot(diff, diff);
+			if (r_sq < h_sq)
+			{
+				density += CalculateDensity(r_sq);
+			}
 		}
+
+		GroupMemoryBarrierWithGroupSync();
 	}
+
 	_ParticlesDensityWrite[i].density = density;
 }
 
@@ -120,37 +135,58 @@ float2 CalculateLapVelocity(float r, float2 P_velocity, float2 N_velocity, float
 	return _Mass * _Viscosity * _LapKernel / (N_density + 1e-5) * (h - r) * velDiff;
 }
 
+groupshared struct { 
+	float2 position;
+	float2 velocity;
+	float density;
+} force_shared_pos[BLOCK_SIZE];
+
 [numthreads(32, 1, 1)]
-void Force(uint3 DTid : SV_DispatchThreadID)
+void Force(uint3 DTid : SV_DispatchThreadID, uint GI : SV_GroupIndex)
 {
 	const uint i = DTid.x;
 	float2 P_position = _ParticlesRead[i].position;
 	float2 P_velocity = _ParticlesRead[i].velocity;
-	float  P_density = _ParticlesDensityRead[i].density;
+	float  P_density  = _ParticlesDensityRead[i].density;
 	float  P_pressure = CalculatePressure(P_density);
 	const float h_sq = _EffectiveRadius * _EffectiveRadius;
 	float2 acceleration = float2(0, 0);
 
-	for (uint j = 0; j < (uint)_MaxParticles; j++)
+	[loop]
+	for (uint blockID = 0; blockID < (uint)_MaxParticles; blockID += BLOCK_SIZE)
 	{
-		float2 N_position = _ParticlesRead[j].position;
-		float2 diff = N_position - P_position;
-		float r_sq = dot(diff, diff);
-		if (r_sq < h_sq && i != j)
+		// Cache a tile of partilces to shared memory to increase IO efficiency
+		force_shared_pos[GI].position = _ParticlesRead[blockID + GI].position;
+		force_shared_pos[GI].velocity = _ParticlesRead[blockID + GI].velocity;
+		force_shared_pos[GI].density = _ParticlesDensityRead[blockID + GI].density;
+
+		GroupMemoryBarrierWithGroupSync();
+
+		[loop]
+		for (uint tileID = 0; tileID < BLOCK_SIZE; tileID++)
 		{
-			float2 N_velocity = _ParticlesRead[j].velocity;
-			float N_density = _ParticlesDensityRead[j].density;
-			float N_pressure = CalculatePressure(N_density);
-			float r = sqrt(r_sq);
+			uint j = blockID + tileID;
+			float2 N_position = force_shared_pos[tileID].position;
 
-			// Pressure Term
-			acceleration += CalculateGradPressure(r, P_pressure, N_pressure, N_density, diff);
+			float2 diff = N_position - P_position;
+			float r_sq = dot(diff, diff);
+			if (r_sq < h_sq && i != j)
+			{
+				float2 N_velocity = force_shared_pos[tileID].velocity;
+				float N_density = force_shared_pos[tileID].density;
+				float N_pressure = CalculatePressure(N_density);
+				float r = sqrt(r_sq);
 
-			// Viscosity Term
-			acceleration += CalculateLapVelocity(r, P_velocity, N_velocity, N_density);
+				// Pressure Term
+				acceleration += CalculateGradPressure(r, P_pressure, N_pressure, N_density, diff);
+
+				// Viscosity Term
+				acceleration += CalculateLapVelocity(r, P_velocity, N_velocity, N_density);
+			}
 		}
-	}
 
+		GroupMemoryBarrierWithGroupSync();
+	}
 	_ParticlesForceWrite[i].acceleration = acceleration / (P_density + 1e-5);
 }
 
@@ -165,7 +201,7 @@ void Integrate(uint3 DTid : SV_DispatchThreadID)
 	float2 position     = _ParticlesRead[i].position;
 	float2 velocity     = _ParticlesRead[i].velocity;
 	float2 acceleration = _ParticlesForceRead[i].acceleration;
-	float2 gravity      = float2(0, -9.8);
+	float2 gravity      = _Gravity.xy;
 
 	[unroll]
 	for (uint j = 0; j < 4; j++)

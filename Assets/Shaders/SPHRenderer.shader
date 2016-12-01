@@ -20,8 +20,6 @@
 	{
 		float2 position;
 		float2 velocity;
-		float2 acceleration;
-		float  density;
 	};
 
 	struct v2g
@@ -37,7 +35,8 @@
 		float4 color : COLOR;
 	};
 
-	StructuredBuffer<Particle> _ParticleBuffer;
+	StructuredBuffer<Particle> _ParticlesBuffer;
+
 	sampler2D _ParticleTexture;
 	float4x4 _InvViewMatrix;
 	float4 _DropTexture_ST;
@@ -62,9 +61,9 @@
 	v2g vert(uint id : SV_VertexID)
 	{
 		v2g o;
-		o.position.xy = _ParticleBuffer[id].position;
+		o.position.xy = _ParticlesBuffer[id].position;
 		o.position.z = _ParticleSize;
-		o.color = float4(HUEtoRGB(smoothstep(0, 10, length(_ParticleBuffer[id].velocity))), 1);
+		o.color = float4(HUEtoRGB(smoothstep(0, 10, length(_ParticlesBuffer[id].velocity))), 1);
 		return o;
 	}
 

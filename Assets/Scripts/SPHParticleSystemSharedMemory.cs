@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace SPHFluid
 {
-    public class SPHParticleSystem : MonoBehaviour
+    public class SPHParticleSystemSharedMemory : MonoBehaviour
     {
         public struct Particle
         {
@@ -136,7 +136,7 @@ namespace SPHFluid
             int kernelId;
 
             // Density
-            kernelId = SPHComputeShader.FindKernel("Density");
+            kernelId= SPHComputeShader.FindKernel("Density");
             SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead", SPHParticlesRead);
             SPHComputeShader.SetBuffer(kernelId, "_ParticlesDensityWrite", SPHParticlesDensity);
             SPHComputeShader.Dispatch(kernelId, Mathf.CeilToInt(maxParticles / 32) + 1, 1, 1);
@@ -171,7 +171,7 @@ namespace SPHFluid
 
         }
 
-        static void Swap<T>(ref T lhs, ref T rhs)
+        static void Swap<T> (ref T lhs, ref T rhs)
         {
             T tmp = lhs;
             lhs = rhs;
@@ -217,22 +217,22 @@ namespace SPHFluid
 
         void SetConstants()
         {
-            SPHComputeShader.SetFloat("_RestDensity", RestDensity);
-            SPHComputeShader.SetFloat("_PressureCoef", PressureCoef);
-            SPHComputeShader.SetFloat("_Mass", Mass);
+            SPHComputeShader.SetFloat("_RestDensity",     RestDensity);
+            SPHComputeShader.SetFloat("_PressureCoef",    PressureCoef);
+            SPHComputeShader.SetFloat("_Mass",            Mass);
             SPHComputeShader.SetFloat("_EffectiveRadius", EffectiveRadius);
-            SPHComputeShader.SetFloat("_TimeStep", TimeStep);
-            SPHComputeShader.SetFloat("_Viscosity", ViscosityCoef);
-            SPHComputeShader.SetFloat("_WallStiffness", WallStiffness);
-            SPHComputeShader.SetFloat("_ParticleGap", ParticleInitGap);
-            SPHComputeShader.SetVector("_Gravity", Gravity);
-            SPHComputeShader.SetVector("_MinBoundary", MinBoundary);
-            SPHComputeShader.SetVector("_MaxBoundary", MaxBoundary);
-            SPHComputeShader.SetInt("_MaxParticles", maxParticles);
-            SPHComputeShader.SetFloat("_Poly6Kernel", Poly6Kernel);
-            SPHComputeShader.SetFloat("_SpikeyKernel", SpikeyKernel);
-            SPHComputeShader.SetFloat("_LapKernel", LapKernel);
-            SPHComputeShader.SetFloats("_WallNormals", WallNormals);
+            SPHComputeShader.SetFloat("_TimeStep",        TimeStep);
+            SPHComputeShader.SetFloat("_Viscosity",       ViscosityCoef);
+            SPHComputeShader.SetFloat("_WallStiffness",   WallStiffness);
+            SPHComputeShader.SetFloat("_ParticleGap",     ParticleInitGap);
+            SPHComputeShader.SetVector("_Gravity",        Gravity);
+            SPHComputeShader.SetVector("_MinBoundary",    MinBoundary);
+            SPHComputeShader.SetVector("_MaxBoundary",    MaxBoundary);
+            SPHComputeShader.SetInt("_MaxParticles",      maxParticles);
+            SPHComputeShader.SetFloat("_Poly6Kernel",     Poly6Kernel);
+            SPHComputeShader.SetFloat("_SpikeyKernel",    SpikeyKernel);
+            SPHComputeShader.SetFloat("_LapKernel",       LapKernel);
+            SPHComputeShader.SetFloats("_WallNormals",    WallNormals);
         }
 
         void OnDisable()

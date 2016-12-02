@@ -65,7 +65,7 @@ float CalculateDensity(float r_sq)
 }
 
 groupshared float2 density_shared_pos[BLOCK_SIZE];
-[numthreads(32, 1, 1)]
+[numthreads(BLOCK_SIZE, 1, 1)]
 void Density(uint3 DTid : SV_DispatchThreadID, uint GI : SV_GroupIndex)
 {
 	const uint i = DTid.x;
@@ -119,7 +119,7 @@ float2 CalculateGradPressure(float r, float P_pressure, float N_pressure, float 
 	// r : 相対距離, h : 有効半径
 	// g_fGradPressureCoef = fParticleMass * -45.0f / (PI * fSmoothlen^6)
 	// return g_fGradPressureCoef * avg_pressure / N_density * (h - r) * (h - r) / r * (diff);
-	return _Mass * _SpikeyKernel * avgPressure / (N_density + 1e-5) * (h - r) * (h - r) / (r + 1e-5) * (diff);
+	return _Mass * _SpikeyKernel * avgPressure / N_density * (h - r) * (h - r) / r * diff;
 }
 
 float2 CalculateLapVelocity(float r, float2 P_velocity, float2 N_velocity, float N_density)
@@ -132,7 +132,7 @@ float2 CalculateLapVelocity(float r, float2 P_velocity, float2 N_velocity, float
 	// r : 相対距離, h : 有効半径
 	// g_fLapViscosityCoef = fParticleMass * fViscosity * 45.0f / (PI * fSmoothlen^6)
 	// return g_fLapViscosityCoef / N_density * (h - r) * vel_diff;
-	return _Mass * _Viscosity * _LapKernel / (N_density + 1e-5) * (h - r) * velDiff;
+	return _Mass * _Viscosity * _LapKernel / N_density * (h - r) * velDiff;
 }
 
 groupshared struct { 
@@ -141,7 +141,7 @@ groupshared struct {
 	float density;
 } force_shared_pos[BLOCK_SIZE];
 
-[numthreads(32, 1, 1)]
+[numthreads(BLOCK_SIZE, 1, 1)]
 void Force(uint3 DTid : SV_DispatchThreadID, uint GI : SV_GroupIndex)
 {
 	const uint i = DTid.x;
@@ -187,14 +187,14 @@ void Force(uint3 DTid : SV_DispatchThreadID, uint GI : SV_GroupIndex)
 
 		GroupMemoryBarrierWithGroupSync();
 	}
-	_ParticlesForceWrite[i].acceleration = acceleration / (P_density + 1e-5);
+	_ParticlesForceWrite[i].acceleration = acceleration / P_density;
 }
 
 //--------------------------------------------------------------------------------------
 // Integration
 //--------------------------------------------------------------------------------------
 
-[numthreads(32, 1, 1)]
+[numthreads(BLOCK_SIZE, 1, 1)]
 void Integrate(uint3 DTid : SV_DispatchThreadID)
 {
 	const uint i = DTid.x;

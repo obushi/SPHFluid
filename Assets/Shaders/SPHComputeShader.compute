@@ -30,6 +30,7 @@ cbuffer Constants : register(b0)
 	float  _Viscosity;
 	float  _WallStiffness;
 	float  _ParticleGap;
+	float4 _Gravity;
 	float2 _MinBoundary;
 	float2 _MaxBoundary;
 	int    _MaxParticles;
@@ -92,7 +93,7 @@ float CalculatePressure(float density)
 	// Implements this equation (Tait Equation):
 	// Pressure = B * ((rho / rho_0)^y  - 1)
 	// B : 圧力定数, rho : 密度, rho_0 : 初期密度, y : 物質定数
-	return _PressureCoef * max(pow(density / _RestDensity, 3) - 1, 0);
+	return _PressureCoef * max(pow(density /_RestDensity, 3) - 1, 0);
 }
 
 float2 CalculateGradPressure(float r, float P_pressure, float N_pressure, float N_density, float2 diff)
@@ -104,7 +105,7 @@ float2 CalculateGradPressure(float r, float P_pressure, float N_pressure, float 
 	// r : 相対距離, h : 有効半径
 	// g_fGradPressureCoef = fParticleMass * -45.0f / (PI * fSmoothlen^6)
 	// return g_fGradPressureCoef * avg_pressure / N_density * (h - r) * (h - r) / r * (diff);
-	return _Mass * _SpikeyKernel * avgPressure / (N_density + 1e-5) * (h - r) * (h - r) / (r + 1e-5) * (diff);
+	return _Mass * _SpikeyKernel * avgPressure / N_density * (h - r) * (h - r) / r * (diff);
 }
 
 float2 CalculateLapVelocity(float r, float2 P_velocity, float2 N_velocity, float N_density)
@@ -117,7 +118,7 @@ float2 CalculateLapVelocity(float r, float2 P_velocity, float2 N_velocity, float
 	// r : 相対距離, h : 有効半径
 	// g_fLapViscosityCoef = fParticleMass * fViscosity * 45.0f / (PI * fSmoothlen^6)
 	// return g_fLapViscosityCoef / N_density * (h - r) * vel_diff;
-	return _Mass * _Viscosity * _LapKernel / (N_density + 1e-5) * (h - r) * velDiff;
+	return _Mass * _Viscosity * _LapKernel / N_density * (h - r) * velDiff;
 }
 
 [numthreads(32, 1, 1)]
@@ -151,7 +152,7 @@ void Force(uint3 DTid : SV_DispatchThreadID)
 		}
 	}
 
-	_ParticlesForceWrite[i].acceleration = acceleration / (P_density + 1e-5);
+	_ParticlesForceWrite[i].acceleration = acceleration / P_density;
 }
 
 //--------------------------------------------------------------------------------------
@@ -165,7 +166,7 @@ void Integrate(uint3 DTid : SV_DispatchThreadID)
 	float2 position     = _ParticlesRead[i].position;
 	float2 velocity     = _ParticlesRead[i].velocity;
 	float2 acceleration = _ParticlesForceRead[i].acceleration;
-	float2 gravity      = float2(0, -9.8);
+	float2 gravity      = _Gravity.xy;
 
 	[unroll]
 	for (uint j = 0; j < 4; j++)

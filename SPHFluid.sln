@@ -1,7 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2015
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPHFluid.CSharp.Plugins", "SPHFluid.CSharp.Plugins.csproj", "{503E29A9-774C-750A-5957-4D20ED53D6CE}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPHFluid.CSharp", "SPHFluid.CSharp.csproj", "{5DD7418E-17AA-994C-F960-14E9E939AE5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SPHFluid.CSharp.Editor", "SPHFluid.CSharp.Editor.csproj", "{7A2B51D1-5F96-B095-BCB1-C848A760C97A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +13,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{503E29A9-774C-750A-5957-4D20ED53D6CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{503E29A9-774C-750A-5957-4D20ED53D6CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{503E29A9-774C-750A-5957-4D20ED53D6CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{503E29A9-774C-750A-5957-4D20ED53D6CE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5DD7418E-17AA-994C-F960-14E9E939AE5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5DD7418E-17AA-994C-F960-14E9E939AE5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DD7418E-17AA-994C-F960-14E9E939AE5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DD7418E-17AA-994C-F960-14E9E939AE5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A2B51D1-5F96-B095-BCB1-C848A760C97A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A2B51D1-5F96-B095-BCB1-C848A760C97A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A2B51D1-5F96-B095-BCB1-C848A760C97A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A2B51D1-5F96-B095-BCB1-C848A760C97A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,60 @@
+﻿#pragma kernel BitonicSort
+#pragma kernel TransposeMatrix
+
+#define BITONIC_BLOCK_SIZE 512
+#define TRANSPOSE_BLOCK_SIZE 16
+
+//--------------------------------------------------------------------------------------
+// Constant Buffers
+//--------------------------------------------------------------------------------------
+cbuffer CB
+{
+	uint _Level;
+	uint _LevelMask;
+	uint _Width;
+	uint _Height;
+}
+
+//--------------------------------------------------------------------------------------
+// Structured Buffers
+//--------------------------------------------------------------------------------------
+StructuredBuffer<uint> _Input;
+RWStructuredBuffer<uint> _Data;
+
+//--------------------------------------------------------------------------------------
+// Bitonic Sort Compute Shader
+//--------------------------------------------------------------------------------------
+groupshared uint shared_data[BITONIC_BLOCK_SIZE];
+
+[numthreads(BITONIC_BLOCK_SIZE, 1, 1)]
+void BitonicSort(uint3 DTid : SV_DispatchThreadID, uint GI : SV_GroupIndex)
+{
+	// Load shared data
+	shared_data[GI] = _Data[DTid.x];
+	GroupMemoryBarrierWithGroupSync();
+
+	// Sort the shared data
+	for (uint j = _Level >> 1; j > 0; j >>= 1)
+	{
+		uint result = ((shared_data[GI & ~j] <= shared_data[GI | j]) == (bool)(_LevelMask & DTid.x)) ? shared_data[GI ^ j] : shared_data[GI];
+		GroupMemoryBarrierWithGroupSync();
+		shared_data[GI] = result;
+		GroupMemoryBarrierWithGroupSync();
+	}
+
+	// Store shared data
+	_Data[DTid.x] = shared_data[GI];
+}
+
+//--------------------------------------------------------------------------------------
+// Matrix Transpose Compute Shader
+//--------------------------------------------------------------------------------------
+groupshared uint transpose_shared_data[TRANSPOSE_BLOCK_SIZE * TRANSPOSE_BLOCK_SIZE];
+[numthreads(TRANSPOSE_BLOCK_SIZE, TRANSPOSE_BLOCK_SIZE, 1)]
+void TransposeMatrix(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex)
+{
+	transpose_shared_data[GI] = _Input[DTid.y * _Width + DTid.x];
+	GroupMemoryBarrierWithGroupSync();
+	uint2 xy = DTid.yx - GTid.yx + GTid.xy;
+	_Data[xy.y * _Height + xy.x] = transpose_shared_data[GTid.x * TRANSPOSE_BLOCK_SIZE + GTid.y];
+}

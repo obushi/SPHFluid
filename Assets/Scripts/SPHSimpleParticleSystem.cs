@@ -74,6 +74,14 @@ namespace SPHFluid
         [SerializeField]
         Vector2 Gravity = new Vector2(0, -9.8f);
 
+        Vector4 GridDim
+        {
+            get
+            {
+                return new Vector4(1 / EffectiveRadius, 1 / EffectiveRadius, 0, 0);
+            }
+        }
+
         [SerializeField]
         Vector2 MinBoundary = new Vector2(0.0f, 0.0f);
 

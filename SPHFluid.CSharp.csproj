@@ -69,11 +69,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\CameraPan.cs" />
+    <Compile Include="Assets\Scripts\SPHAdvancedParticleSystem.cs" />
     <Compile Include="Assets\Scripts\SPHSimpleParticleSystem.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\BitnicSort.compute" />
     <None Include="Assets\Shaders\SPHComputeShader.compute" />
     <None Include="Assets\Shaders\SPHComputeShaderSharedMemory.compute" />
+    <None Include="Assets\Shaders\SPHComputeShaderSorted.compute" />
     <None Include="Assets\Shaders\SPHRenderer.shader" />
     <None Include="Assets\Standard Assets\Effects\GlassRefraction\Shaders\GlassStainedBumpDistort.shader" />
     <None Include="Assets\Standard Assets\Effects\ImageEffects\Shaders\BlendModesOverlay.shader" />

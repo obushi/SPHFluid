@@ -30,6 +30,12 @@ namespace SPHFluid
         Texture2D particleTexture;
 
         [SerializeField]
+        RenderTexture backRenderTexture;
+
+        [SerializeField]
+        RenderTexture frontRenderTexture;
+
+        [SerializeField]
         Shader particleRenderShader;
 
         ComputeBuffer SPHParticlesRead;
@@ -114,6 +120,9 @@ namespace SPHFluid
         float SpikeyKernel { get { return -45.0f / (Mathf.PI * Mathf.Pow(EffectiveRadius, 6.0f)); } }
         float LapKernel { get { return 45.0f / (Mathf.PI * Mathf.Pow(EffectiveRadius, 6.0f)); } }
 
+        [SerializeField]
+        Camera metaballResultCamera;
+
         #endregion
 
         // Use this for initialization
@@ -121,6 +130,8 @@ namespace SPHFluid
         {
             particleMaterial = new Material(particleRenderShader);
             particleMaterial.hideFlags = HideFlags.HideAndDontSave;
+            backRenderTexture = new RenderTexture(Screen.width, Screen.height, 0);
+            frontRenderTexture = new RenderTexture(Screen.width, Screen.height, 0);
 
             InitializeComputeBuffers();
         }
@@ -162,17 +173,25 @@ namespace SPHFluid
             SPHComputeShader.Dispatch(kernelId, maxParticles / 32, 1, 1);
 
             // Render
+            
             particleMaterial.SetPass(0);
             particleMaterial.SetMatrix("_InvViewMatrix", Camera.main.worldToCameraMatrix.inverse);
             particleMaterial.SetTexture("_ParticleTexture", particleTexture);
             particleMaterial.SetFloat("_ParticleSize", ParticleRadius);
             particleMaterial.SetBuffer("_ParticlesBuffer", SPHParticlesWrite);
             particleMaterial.SetBuffer("_ParticlesDensity", SPHParticlesDensity);
+
+            RenderTexture rt = RenderTexture.GetTemporary(Screen.width, Screen.height, 0);
+            Graphics.SetRenderTarget(rt);
+            GL.Clear(true, true, Color.black);
             Graphics.DrawProcedural(MeshTopology.Points, maxParticles);
 
+            particleMaterial.SetPass(1);
+            particleMaterial.SetTexture("_BackTexture", rt);
+            Graphics.Blit(null, null, particleMaterial, 1);
+            RenderTexture.ReleaseTemporary(rt);
 
             Swap(ref SPHParticlesRead, ref SPHParticlesWrite);
-
         }
 
         static void Swap<T>(ref T lhs, ref T rhs)

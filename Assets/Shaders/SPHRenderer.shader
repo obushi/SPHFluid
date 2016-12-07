@@ -56,6 +56,7 @@
 	StructuredBuffer<ParticleDensity> _ParticlesDensity;
 
 	sampler2D _ParticleTexture;
+	sampler2D _BackTexture;
 	float4x4 _InvViewMatrix;
 	float4 _DropTexture_ST;
 	float _ParticleSize;
@@ -84,7 +85,8 @@
 		//o.color = float4(HUEtoRGB(smoothstep(0, 10, length(_ParticlesBuffer[id].velocity))), 0.6);
 		// 白 <-- 低  [ 彩度 ] 高 --> 青
 
-		o.color = float4(HSVtoRGB(float3(0.8, smoothstep(2000, 1000, length(_ParticlesDensity[id].density)), 1)), 1.0);
+		//o.color = float4(HSVtoRGB(float3(0.8, smoothstep(2000, 1000, length(_ParticlesDensity[id].density)), 1)), 1.0);
+		o.color = float4(1, 1, 1, 1);
 		return o;
 	}
 
@@ -109,8 +111,12 @@
 
 	fixed4 frag(g2f i) : SV_Target
 	{
-		//return float4(1, 1, 1, 1);
-		return tex2D(_ParticleTexture, i.texcoord.xy) * i.color;
+		return tex2D(_ParticleTexture, i.texcoord.xy);
+	}
+
+	fixed4 metaball_frag (v2f_img i) : SV_Target
+	{
+		return step(fixed4(0.9, 0.9, 0.9, 1), tex2D(_BackTexture, i.uv)) * fixed4(0.2, 0.8, 1, 1);
 	}
 
 	ENDCG
@@ -119,6 +125,7 @@
 	{
 		Tags{ "RenderType" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
 			Zwrite Off
+			BlendOp Add
 			Blend One One
 			Cull Off
 
@@ -129,6 +136,15 @@
 			#pragma vertex vert
 			#pragma geometry geom
 			#pragma fragment frag
+			ENDCG
+		}
+		
+		Pass
+		{
+			CGPROGRAM
+			#pragma target 5.0
+			#pragma vertex vert_img
+			#pragma fragment metaball_frag
 			ENDCG
 		}
 	}

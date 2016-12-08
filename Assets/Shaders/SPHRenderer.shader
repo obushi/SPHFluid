@@ -3,6 +3,7 @@
 	Properties
 	{
 		_MainTex("Texture", 2D) = "white" {}
+		_WaterScreenBoundary("Vector", Vector) = (0, 0, 1, 1)
 	}
 
 	CGINCLUDE
@@ -39,9 +40,14 @@
 		float density;
 	};
 
+	struct ParticleForce
+	{
+		float2 acceleration;
+	};
+
 	struct v2g
 	{
-		float3 position : TEXCOORD0;
+		float4 position : TEXCOORD0;
 		float4 color : COLOR;
 	};
 
@@ -52,14 +58,28 @@
 		float4 color : COLOR;
 	};
 
+	struct v2f_metaball
+	{
+		float4 position : SV_POSITION;
+		float2 screen_uv : TEXCOORD0;
+		float2 water_uv : TEXCOORD1;
+	};
+
 	StructuredBuffer<Particle> _ParticlesBuffer;
 	StructuredBuffer<ParticleDensity> _ParticlesDensity;
+	StructuredBuffer<ParticleForce> _ParticlesForce;
 
 	sampler2D _ParticleTexture;
-	sampler2D _BackTexture;
+	sampler2D _MainTex;
 	float4x4 _InvViewMatrix;
+	float4x4 _CamToWorldMat;
 	float4 _DropTexture_ST;
+	float4 _WaterScreenBoundary;
 	float _ParticleSize;
+	float2 _MaxBoundary;
+	float2 _MinBoundary;
+	float _UVPosMinY;
+	float _UVPosMaxY;
 
 	static const float2 g_positions[4] =
 	{
@@ -82,11 +102,16 @@
 		v2g o;
 		o.position.xy = _ParticlesBuffer[id].position;
 		o.position.z = _ParticleSize;
+		o.position.w = _ParticlesDensity[id].density;
+
 		//o.color = float4(HUEtoRGB(smoothstep(0, 10, length(_ParticlesBuffer[id].velocity))), 0.6);
 		// 白 <-- 低  [ 彩度 ] 高 --> 青
 
 		//o.color = float4(HSVtoRGB(float3(0.8, smoothstep(2000, 1000, length(_ParticlesDensity[id].density)), 1)), 1.0);
 		o.color = float4(1, 1, 1, 1);
+
+		_WaterScreenBoundary.xy = mul(UNITY_MATRIX_MVP, float4(_MinBoundary.xy, 0, 1)).xy;
+		_WaterScreenBoundary.zw = mul(UNITY_MATRIX_MVP, float4(_MaxBoundary.xy, 0, 1)).xy;
 		return o;
 	}
 
@@ -97,7 +122,7 @@
 		[unroll]
 		for (int i = 0; i < 4; i++)
 		{
-			float3 position = float3(g_positions[i], 0) * In[0].position.z * 1;
+			float3 position = float3(g_positions[i], 0) * lerp(In[0].position.z * 0.01, In[0].position.z, smoothstep(1, 1000, In[0].position.w));
 			position = mul(_InvViewMatrix, position) + float3(In[0].position.xy, 0);
 			o.position = mul(UNITY_MATRIX_MVP, float4(position, 1.0));
 			o.color = In[0].color;
@@ -114,19 +139,29 @@
 		return tex2D(_ParticleTexture, i.texcoord.xy);
 	}
 
+	//v2f_metaball metaball_vert(appdata_base i)
+	//{
+	//	v2f_metaball o;
+	//	o.position = float4(UnityObjectToClipPos(i.vertex));
+	//	o.screen_uv = i.texcoord.xy;
+	//	o.water_uv = float2(i.vertex.x / (_WaterScreenBoundary.z - _WaterScreenBoundary.x), i.vertex.y / (_WaterScreenBoundary.w - _WaterScreenBoundary.y));
+	//	return o;
+	//}
+
 	fixed4 metaball_frag (v2f_img i) : SV_Target
 	{
-		return step(fixed4(0.9, 0.9, 0.9, 1), tex2D(_BackTexture, i.uv)) * fixed4(0.2, 0.8, 1, 1);
+		float posY = smoothstep(_UVPosMinY, _UVPosMaxY, i.uv.y);
+		return smoothstep(fixed4(0.6, 0.6, 0.6, 0), fixed4(1, 1, 1, 1), tex2D(_MainTex, i.uv)) * fixed4(0.1, 1 - posY, 1, 1);
 	}
 
 	ENDCG
 
 	SubShader
 	{
-		Tags{ "RenderType" = "Transparent" "IgnoreProjector" = "True" "RenderType" = "Transparent" }
+		Tags{ "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
 			Zwrite Off
-			BlendOp Add
 			Blend One One
+			//Blend SrcAlpha OneMinusSrcAlpha
 			Cull Off
 
 		Pass

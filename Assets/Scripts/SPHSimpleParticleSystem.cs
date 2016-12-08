@@ -123,6 +123,11 @@ namespace SPHFluid
         [SerializeField]
         Camera metaballResultCamera;
 
+        [SerializeField]
+        Vector4 waterScreenBoundary = new Vector4(0, 0, 1, 1);
+        
+        
+
         #endregion
 
         // Use this for initialization
@@ -139,7 +144,14 @@ namespace SPHFluid
         // Update is called once per frame
         void Update()
         {
-
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+                Gravity = new Vector2(9.8f, 0);
+            else if (Input.GetKeyDown(KeyCode.UpArrow))
+                Gravity = new Vector2(0, 9.8f);
+            else if (Input.GetKeyDown(KeyCode.LeftArrow))
+                Gravity = new Vector2(-9.8f, 0);
+            else if (Input.GetKeyDown(KeyCode.DownArrow))
+                Gravity = new Vector2(0, -9.8f);
         }
 
         void OnDrawGizmos()
@@ -181,15 +193,18 @@ namespace SPHFluid
             particleMaterial.SetBuffer("_ParticlesBuffer", SPHParticlesWrite);
             particleMaterial.SetBuffer("_ParticlesDensity", SPHParticlesDensity);
 
-            RenderTexture rt = RenderTexture.GetTemporary(Screen.width, Screen.height, 0);
-            Graphics.SetRenderTarget(rt);
+            particleMaterial.SetVector("_MaxBoundary", MaxBoundary);
+            particleMaterial.SetVector("_MinBoundary", MinBoundary);
+
+            Graphics.SetRenderTarget(backRenderTexture);
             GL.Clear(true, true, Color.black);
             Graphics.DrawProcedural(MeshTopology.Points, maxParticles);
 
+
             particleMaterial.SetPass(1);
-            particleMaterial.SetTexture("_BackTexture", rt);
-            Graphics.Blit(null, null, particleMaterial, 1);
-            RenderTexture.ReleaseTemporary(rt);
+            particleMaterial.SetFloat("_UVPosMaxY", Camera.main.WorldToViewportPoint(MaxBoundary).y);
+            particleMaterial.SetFloat("_UVPosMinY", Camera.main.WorldToViewportPoint(MinBoundary).y);
+            Graphics.Blit(backRenderTexture, null, particleMaterial, 1);
 
             Swap(ref SPHParticlesRead, ref SPHParticlesWrite);
         }

@@ -155,6 +155,8 @@ namespace SPHFluid
                 Gravity = new Vector2(-9.8f, 0);
             else if (Input.GetKeyDown(KeyCode.DownArrow))
                 Gravity = new Vector2(0, -9.8f);
+
+            
         }
 
         void OnDrawGizmos()
@@ -263,6 +265,11 @@ namespace SPHFluid
             SPHComputeShader.SetFloat("_SpikeyKernel", SpikeyKernel);
             SPHComputeShader.SetFloat("_LapKernel", LapKernel);
             SPHComputeShader.SetFloats("_WallNormals", WallNormals);
+
+            Vector3 mousePos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Camera.main.transform.position.z);
+            Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(mousePos);
+            worldMousePos.z = 3.0f;
+            SPHComputeShader.SetVector("_MousePosition", worldMousePos);
         }
 
         void OnDisable()

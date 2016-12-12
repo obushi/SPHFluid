@@ -267,7 +267,7 @@ MonoBehaviour:
   Mass: 0.0002
   EffectiveRadius: 0.012
   TimeStep: 0.005
-  ViscosityCoef: 1
+  ViscosityCoef: 1.02
   ParticleRadius: 0.03
   WallStiffness: 10000
   ParticleInitGap: 0.0045

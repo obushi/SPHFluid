@@ -39,6 +39,7 @@ cbuffer Constants : register( b0 )
 	float  _SpikeyKernel;
 	float  _LapKernel;
 	float4 _WallNormals[4];
+	float4 _MousePosition;
 }
 
 StructuredBuffer<Particle> _ParticlesRead : register( t0 );
@@ -209,6 +210,9 @@ void Integrate(uint3 DTid : SV_DispatchThreadID)
 		float dist = dot(float3(position, 1), _WallNormals[j].xyz);
 		acceleration += min(dist, 0) * -_WallStiffness * _WallNormals[j].xy;
 	}
+
+	float dist2 = distance(position, _MousePosition.xy) - 0.1;
+	acceleration += min(dist2, 0) * -_WallStiffness * -(position - _MousePosition.xy);
 
 	// Apply gravity
 	acceleration += gravity;

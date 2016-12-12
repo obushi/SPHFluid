@@ -104,7 +104,6 @@
 		o.position.z = _ParticleRadius;
 		o.position.w = _ParticlesDensity[id].density;
 
-		//o.color = float4(HUEtoRGB(smoothstep(0, 10, length(_ParticlesBuffer[id].velocity))), 0.6);
 		// 白 <-- 低  [ 彩度 ] 高 --> 青
 
 		//o.color = float4(HSVtoRGB(float3(0.8, smoothstep(2000, 1000, length(_ParticlesDensity[id].density)), 1)), 1.0);
@@ -139,6 +138,7 @@
 	fixed4 metaball_frag (v2f_img i) : SV_Target
 	{
 		float posY = smoothstep(_UVPosMinY, _UVPosMaxY, i.uv.y);
+		//return tex2D(_MainTex, i.uv);
 		return tex2D(_MainTex, i.uv) - smoothstep(fixed4(_ContourMinThreshold, _ContourMinThreshold, _ContourMinThreshold, 0), fixed4(_ContourMaxThreshold, _ContourMaxThreshold, _ContourMaxThreshold, 1), tex2D(_MainTex, i.uv)) + smoothstep(fixed4(0, 0, 0, 0), fixed4(_ContourMinThreshold, _ContourMinThreshold, _ContourMinThreshold, 1), tex2D(_MainTex, i.uv)) * fixed4(0.1, posY, 1, 0);
 	}
 

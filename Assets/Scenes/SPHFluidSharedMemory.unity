@@ -197,7 +197,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 690735059}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7fceaeb339b971b429c4cc600acabd13, type: 3}
   m_Name: 
@@ -257,27 +257,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SPHComputeShader: {fileID: 7200000, guid: 08e3557727e56b94dae285d3fbdfe9a1, type: 3}
-  particleTexture: {fileID: 2800000, guid: 6c72fd81fa96b844b818af0824a67a7e, type: 3}
+  particleTexture: {fileID: 10300, guid: 0000000000000000f000000000000000, type: 0}
   backRenderTexture: {fileID: 8400000, guid: 54bb94ddee901ec4a869b212fa263ec8, type: 2}
   frontRenderTexture: {fileID: 0}
   particleRenderShader: {fileID: 4800000, guid: 0943c3bd82e6c0947854025a0483b6c3,
     type: 3}
   RestDensity: 1000
-  PressureCoef: 400
+  PressureCoef: 300
   Mass: 0.0002
   EffectiveRadius: 0.012
   TimeStep: 0.005
-  ViscosityCoef: 1.1
+  ViscosityCoef: 1
   ParticleRadius: 0.03
   WallStiffness: 10000
   ParticleInitGap: 0.0045
   Gravity: {x: 0, y: -9.8}
+  contourMinThreshold: 0.5
+  contourMaxThreshold: 0.9
   MinBoundary: {x: 0, y: 0}
   MaxBoundary: {x: 3, y: 3}
   EmitPosition: {x: 0, y: 0}
   maxParticles: 16384
   metaballResultCamera: {fileID: 0}
-  waterScreenBoundary: {x: 0, y: 0.3, z: 1, w: 0.9}
 --- !u!4 &1528609566
 Transform:
   m_ObjectHideFlags: 0

@@ -80,6 +80,12 @@ namespace SPHFluid
         [SerializeField]
         Vector2 Gravity = new Vector2(0, -9.8f);
 
+        [SerializeField, Range(0.01f, 1.0f)]
+        float contourMinThreshold = 0.5f;
+
+        [SerializeField, Range(0.01f, 1.0f)]
+        float contourMaxThreshold = 0.9f;
+
         Vector4 GridDim
         {
             get
@@ -122,9 +128,6 @@ namespace SPHFluid
 
         [SerializeField]
         Camera metaballResultCamera;
-
-        [SerializeField]
-        Vector4 waterScreenBoundary = new Vector4(0, 0, 1, 1);
         
         
 
@@ -189,7 +192,7 @@ namespace SPHFluid
             particleMaterial.SetPass(0);
             particleMaterial.SetMatrix("_InvViewMatrix", Camera.main.worldToCameraMatrix.inverse);
             particleMaterial.SetTexture("_ParticleTexture", particleTexture);
-            particleMaterial.SetFloat("_ParticleSize", ParticleRadius);
+            particleMaterial.SetFloat("_ParticleRadius", ParticleRadius);
             particleMaterial.SetBuffer("_ParticlesBuffer", SPHParticlesWrite);
             particleMaterial.SetBuffer("_ParticlesDensity", SPHParticlesDensity);
 
@@ -202,6 +205,8 @@ namespace SPHFluid
 
 
             particleMaterial.SetPass(1);
+            particleMaterial.SetFloat("_ContourMinThreshold", contourMinThreshold);
+            particleMaterial.SetFloat("_ContourMaxThreshold", contourMaxThreshold);
             particleMaterial.SetFloat("_UVPosMaxY", Camera.main.WorldToViewportPoint(MaxBoundary).y);
             particleMaterial.SetFloat("_UVPosMinY", Camera.main.WorldToViewportPoint(MinBoundary).y);
             Graphics.Blit(backRenderTexture, null, particleMaterial, 1);

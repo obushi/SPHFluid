@@ -268,7 +268,6 @@ namespace SPHFluid
 
             Vector3 mousePos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, -Camera.main.transform.position.z);
             Vector3 worldMousePos = Camera.main.ScreenToWorldPoint(mousePos);
-            worldMousePos.z = 3.0f;
             SPHComputeShader.SetVector("_MousePosition", worldMousePos);
         }
 

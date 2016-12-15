@@ -80,6 +80,12 @@ namespace SPHFluid
         [SerializeField]
         float ParticleInitGap = 0.0045f;    // 初期化時の隙間
 
+        [SerializeField, Range(0.01f, 1.0f)]
+        float contourMinThreshold = 0.5f;
+
+        [SerializeField, Range(0.01f, 1.0f)]
+        float contourMaxThreshold = 0.9f;
+
         [SerializeField]
         Vector2 Gravity = new Vector2(0, -9.8f);
 

@@ -102,6 +102,7 @@ GameObject:
   - 92: {fileID: 5082146}
   - 124: {fileID: 5082145}
   - 81: {fileID: 5082144}
+  - 114: {fileID: 5082149}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -171,12 +172,50 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 5082143}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.78, y: 1.96, z: -4.06}
+  m_LocalPosition: {x: 1.5, y: 1.5, z: -3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 2
+--- !u!114 &5082149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 5082143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fceaeb339b971b429c4cc600acabd13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tweakMode: 0
+  screenBlendMode: 1
+  hdr: 0
+  sepBlurSpread: 0.1
+  quality: 1
+  bloomIntensity: 0.5
+  bloomThreshold: -0.05
+  bloomThresholdColor: {r: 1, g: 1, b: 1, a: 1}
+  bloomBlurIterations: 2
+  hollywoodFlareBlurIterations: 2
+  flareRotation: 0
+  lensflareMode: 1
+  hollyStretchWidth: 2.5
+  lensflareIntensity: 0
+  lensflareThreshold: 0.3
+  lensFlareSaturation: 0.75
+  flareColorA: {r: 0.4, g: 0.4, b: 0.8, a: 0.75}
+  flareColorB: {r: 0.4, g: 0.8, b: 0.8, a: 0.75}
+  flareColorC: {r: 0.8, g: 0.4, b: 0.8, a: 0.75}
+  flareColorD: {r: 0.8, g: 0.4, b: 0, a: 0.75}
+  lensFlareVignetteMask: {fileID: 2800000, guid: 95ef4804fe0be4c999ddaa383536cde8,
+    type: 3}
+  lensFlareShader: {fileID: 4800000, guid: 459fe69d2f6d74ddb92f04dbf45a866b, type: 3}
+  screenBlendShader: {fileID: 4800000, guid: 7856cbff0a0ca45c787d5431eb805bb0, type: 3}
+  blurAndFlaresShader: {fileID: 4800000, guid: be6e39cf196f146d5be72fbefb18ed75, type: 3}
+  brightPassFilterShader: {fileID: 4800000, guid: 0aeaa4cb29f5d4e9c8455f04c8575c8c,
+    type: 3}
 --- !u!1 &430502800
 GameObject:
   m_ObjectHideFlags: 0
@@ -205,23 +244,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SPHComputeShader: {fileID: 7200000, guid: 01e09d9c388bf714f947604b266397ee, type: 3}
-  particleTexture: {fileID: 2800000, guid: bb29f17681fd1fd47914242735e5da18, type: 3}
+  particleTexture: {fileID: 2800000, guid: 6c72fd81fa96b844b818af0824a67a7e, type: 3}
+  backRenderTexture: {fileID: 0}
+  frontRenderTexture: {fileID: 0}
   particleRenderShader: {fileID: 4800000, guid: 0943c3bd82e6c0947854025a0483b6c3,
     type: 3}
   RestDensity: 1000
-  PressureCoef: 200
+  PressureCoef: 300
   Mass: 0.0002
   EffectiveRadius: 0.012
   TimeStep: 0.005
   ViscosityCoef: 0.2
-  ParticleRadius: 0.002
+  ParticleRadius: 0.02
   WallStiffness: 10000
   ParticleInitGap: 0.0045
   Gravity: {x: 0, y: -9.8}
+  contourMinThreshold: 0.5
+  contourMaxThreshold: 0.9
   MinBoundary: {x: 0, y: 0}
   MaxBoundary: {x: 3, y: 3}
   EmitPosition: {x: 0, y: 0}
-  maxParticles: 32768
+  maxParticles: 16384
+  metaballResultCamera: {fileID: 0}
 --- !u!4 &430502802
 Transform:
   m_ObjectHideFlags: 0
@@ -234,7 +278,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
 --- !u!1 &1114157370
 GameObject:
   m_ObjectHideFlags: 0
@@ -297,4 +341,4 @@ Transform:
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0

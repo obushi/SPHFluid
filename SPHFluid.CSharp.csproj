@@ -79,7 +79,6 @@
     <None Include="Assets\Shaders\SPHComputeShaderSharedMemory.compute" />
     <None Include="Assets\Shaders\SPHComputeShaderSorted.compute" />
     <None Include="Assets\Shaders\SPHRenderer.shader" />
-    <None Include="Assets\Shaders\SPHSimpleRenderShader.shader" />
     <None Include="Assets\Standard Assets\Effects\GlassRefraction\Shaders\GlassStainedBumpDistort.shader" />
     <None Include="Assets\Standard Assets\Effects\ImageEffects\Shaders\BlendModesOverlay.shader" />
     <None Include="Assets\Standard Assets\Effects\ImageEffects\Shaders\BlurEffectConeTaps.shader" />

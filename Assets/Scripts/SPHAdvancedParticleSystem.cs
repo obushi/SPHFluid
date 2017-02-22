@@ -33,6 +33,9 @@ namespace SPHFluid
         Texture2D particleTexture;
 
         [SerializeField]
+        RenderTexture backRenderTexture;
+
+        [SerializeField]
         Shader particleRenderShader;
 
         ComputeBuffer SPHGrid;
@@ -41,9 +44,9 @@ namespace SPHFluid
 
         ComputeBuffer SPHGridIndices;
 
-        ComputeBuffer SPHParticlesRead;
+        ComputeBuffer SPHParticles;
 
-        ComputeBuffer SPHParticlesWrite;
+        ComputeBuffer SPHSortedParticles;
 
         ComputeBuffer SPHParticlesForce;
 
@@ -118,10 +121,11 @@ namespace SPHFluid
             }
         }
 
-        [SerializeField]
-        uint numParticles = 32768;
+        uint numParticles = 65536;
 
         const uint BlockSize = 256;
+        const uint BitonicBlockSize = 512;
+        const uint TransposeBlockSize = 16;
 
         uint numGrids { get { return BlockSize * BlockSize; } }
 
@@ -140,6 +144,7 @@ namespace SPHFluid
         {
             particleMaterial = new Material(particleRenderShader);
             particleMaterial.hideFlags = HideFlags.HideAndDontSave;
+            backRenderTexture = new RenderTexture(Screen.width, Screen.height, 0);
 
             InitializeComputeBuffers();
         }
@@ -163,60 +168,36 @@ namespace SPHFluid
             //-----------------------------------------------------------------------------------
             // Sorting Grid
             //-----------------------------------------------------------------------------------
+            
+            SetConstants();
+            int threadGroupsX = (int)(numParticles / BlockSize);
 
             // Build Grid
-            SetConstants();
-
             kernelId = SPHComputeShader.FindKernel("BuildGrid");
-            SPHComputeShader.SetBuffer(kernelId, "_GridWrite", SPHGrid);
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead", SPHParticlesRead);
-            SPHComputeShader.Dispatch(kernelId, (int)numParticles / 32, 1, 1);
-
-            var particles = new Particle[numParticles];
-            SPHParticlesRead.GetData(particles);
-
-            var grid = new uint[numGrids];
-            SPHGrid.GetData(grid);
+            SPHComputeShader.SetBuffer(kernelId, "_GridWrite",     SPHGrid);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead", SPHParticles);
+            SPHComputeShader.Dispatch(kernelId, threadGroupsX, 1, 1);
 
             // Sort Grid
-            GPUSort(ref SPHGrid, ref SPHGrid, ref SPHGridTemp, ref SPHGridTemp);
+            GPUSort(SPHGrid, SPHGridTemp);
 
             // BuildGridIndices - Clear
             kernelId = SPHComputeShader.FindKernel("ClearGridIndices");
             SPHComputeShader.SetBuffer(kernelId, "_GridIndicesWrite", SPHGridIndices);
-            SPHComputeShader.Dispatch(kernelId, (int)numParticles / 32, 1, 1);
-
-            particles = new Particle[numParticles];
-            SPHParticlesRead.GetData(particles);
-
-            grid = new uint[numGrids];
-            SPHGrid.GetData(grid);
-
-            var pf = new ParticleForce[numParticles];
-            SPHParticlesForce.GetData(pf);
+            SPHComputeShader.Dispatch(kernelId, threadGroupsX, 1, 1);
 
             // BuildGridIndices - Build
             kernelId = SPHComputeShader.FindKernel("BuildGridIndices");
             SPHComputeShader.SetBuffer(kernelId, "_GridIndicesWrite", SPHGridIndices);
-            SPHComputeShader.SetBuffer(kernelId, "_GridRead", SPHGrid);
-            SPHComputeShader.Dispatch(kernelId, (int)numParticles / 32, 1, 1);
-
-            particles = new Particle[numParticles];
-            SPHParticlesRead.GetData(particles);
-            pf = new ParticleForce[numParticles];
-            SPHParticlesForce.GetData(pf);
+            SPHComputeShader.SetBuffer(kernelId, "_GridRead",         SPHGrid);
+            SPHComputeShader.Dispatch(kernelId, (int)(numGrids / BlockSize), 1, 1);
 
             // Rearrange
             kernelId = SPHComputeShader.FindKernel("RearrangeParticles");
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead", SPHParticlesRead);
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesWrite", SPHParticlesWrite);
-            SPHComputeShader.SetBuffer(kernelId, "_GridRead", SPHGrid);
-            SPHComputeShader.Dispatch(kernelId, (int)numParticles / 32, 1, 1);
-
-            particles = new Particle[numParticles];
-            SPHParticlesRead.GetData(particles);
-            pf = new ParticleForce[numParticles];
-            SPHParticlesForce.GetData(pf);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead",  SPHParticles);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesWrite", SPHSortedParticles);
+            SPHComputeShader.SetBuffer(kernelId, "_GridRead",       SPHGrid);
+            SPHComputeShader.Dispatch(kernelId, threadGroupsX, 1, 1);
 
             //-----------------------------------------------------------------------------------
             // Calculation 
@@ -224,62 +205,48 @@ namespace SPHFluid
 
             // Density
             kernelId = SPHComputeShader.FindKernel("Density");
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead", SPHParticlesRead);
-            SPHComputeShader.SetBuffer(kernelId, "_GridIndicesRead", SPHGridIndices);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead",         SPHSortedParticles);
+            SPHComputeShader.SetBuffer(kernelId, "_GridIndicesRead",       SPHGridIndices);
             SPHComputeShader.SetBuffer(kernelId, "_ParticlesDensityWrite", SPHParticlesDensity);
-            SPHComputeShader.Dispatch(kernelId, (int)numParticles / 32, 1, 1);
-
-            particles = new Particle[numParticles];
-            SPHParticlesRead.GetData(particles);
-
-            var pd = new ParticleDensity[numParticles];
-            SPHParticlesDensity.GetData(pd);
-            pf = new ParticleForce[numParticles];
-            SPHParticlesForce.GetData(pf);
+            SPHComputeShader.Dispatch(kernelId, threadGroupsX, 1, 1);
 
             // Force
             kernelId = SPHComputeShader.FindKernel("Force");
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead", SPHParticlesRead);
-            SPHComputeShader.SetBuffer(kernelId, "_GridIndicesRead", SPHGridIndices);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead",        SPHSortedParticles);
+            SPHComputeShader.SetBuffer(kernelId, "_GridIndicesRead",      SPHGridIndices);
             SPHComputeShader.SetBuffer(kernelId, "_ParticlesDensityRead", SPHParticlesDensity);
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesForceWrite", SPHParticlesForce);
-            SPHComputeShader.Dispatch(kernelId, (int)numParticles / 32, 1, 1);
-
-            particles = new Particle[numParticles];
-            SPHParticlesRead.GetData(particles);
-            pf = new ParticleForce[numParticles];
-            SPHParticlesForce.GetData(pf);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesForceWrite",  SPHParticlesForce);
+            SPHComputeShader.Dispatch(kernelId, threadGroupsX, 1, 1);
 
             // Integration
             kernelId = SPHComputeShader.FindKernel("Integrate");
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead", SPHParticlesRead);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesRead",      SPHSortedParticles);
             SPHComputeShader.SetBuffer(kernelId, "_ParticlesForceRead", SPHParticlesForce);
-            SPHComputeShader.SetBuffer(kernelId, "_ParticlesWrite", SPHParticlesWrite);
-            SPHComputeShader.Dispatch(kernelId, (int)numParticles / 32, 1, 1);
+            SPHComputeShader.SetBuffer(kernelId, "_ParticlesWrite",     SPHParticles);
+            SPHComputeShader.Dispatch(kernelId, threadGroupsX, 1, 1);
 
-
-            // Render
+            // Rendering
             particleMaterial.SetPass(0);
             particleMaterial.SetMatrix("_InvViewMatrix", Camera.main.worldToCameraMatrix.inverse);
             particleMaterial.SetTexture("_ParticleTexture", particleTexture);
-            particleMaterial.SetFloat("_ParticleSize", ParticleRadius);
-            particleMaterial.SetBuffer("_ParticlesBuffer", SPHParticlesWrite);
+            particleMaterial.SetFloat("_ParticleRadius", ParticleRadius);
+            particleMaterial.SetBuffer("_ParticlesBuffer", SPHSortedParticles);
             particleMaterial.SetBuffer("_ParticlesDensity", SPHParticlesDensity);
+
+            particleMaterial.SetVector("_MaxBoundary", MaxBoundary);
+            particleMaterial.SetVector("_MinBoundary", MinBoundary);
+
+            Graphics.SetRenderTarget(backRenderTexture);
+            GL.Clear(true, true, Color.black);
             Graphics.DrawProcedural(MeshTopology.Points, (int)numParticles);
 
-            particles = new Particle[numParticles];
-            SPHParticlesRead.GetData(particles);
-            pf = new ParticleForce[numParticles];
-            SPHParticlesForce.GetData(pf);
 
-            Swap(ref SPHParticlesRead, ref SPHParticlesWrite);
-
-
-            particles = new Particle[numParticles];
-            SPHParticlesWrite.GetData(particles);
-            SPHParticlesRead.GetData(particles);
-            pf = new ParticleForce[numParticles];
-            SPHParticlesForce.GetData(pf);
+            particleMaterial.SetPass(1);
+            particleMaterial.SetFloat("_ContourMinThreshold", contourMinThreshold);
+            particleMaterial.SetFloat("_ContourMaxThreshold", contourMaxThreshold);
+            particleMaterial.SetFloat("_UVPosMaxY", Camera.main.WorldToViewportPoint(MaxBoundary).y);
+            particleMaterial.SetFloat("_UVPosMinY", Camera.main.WorldToViewportPoint(MinBoundary).y);
+            Graphics.Blit(backRenderTexture, null, particleMaterial, 1);
         }
 
         static void Swap<T>(ref T lhs, ref T rhs)
@@ -289,90 +256,91 @@ namespace SPHFluid
             rhs = tmp;
         }
 
-        void GPUSort(ref ComputeBuffer GridWrite, ref ComputeBuffer GridRead, ref ComputeBuffer GridTempWrite, ref ComputeBuffer GridTempRead)
+        void GPUSort(ComputeBuffer inBuffer, ComputeBuffer tempBuffer)
         {
-            uint numElements = (uint)numParticles;
-            uint matrixWidth = BlockSize;
-            uint matrixHeight = (uint)(numParticles / BlockSize);
+            uint numElements  = numParticles;
+            uint matrixWidth  = BitonicBlockSize;
+            uint matrixHeight = numElements / BitonicBlockSize;
 
             //SetConstants();
-            for (uint level = 2; level <= BlockSize; level<<= 1)
+            for (uint level = 2; level <= BitonicBlockSize; level<<= 1)
             {
                 // Sort the row data
-                int kernelId = BitonicSortComputeShader.FindKernel("BitonicSort");
                 BitonicSortComputeShader.SetInt("_Level", (int)level);
                 BitonicSortComputeShader.SetInt("_LevelMask", (int)level);
-                BitonicSortComputeShader.SetInt("_Width", (int)matrixWidth);
-                BitonicSortComputeShader.SetInt("_Height", (int)matrixHeight);
-                //BitonicSortComputeShader.SetBuffer(kernelId, "_Data", SPHGrid);
-                BitonicSortComputeShader.Dispatch(kernelId, (int)(numParticles / BlockSize), 1, 1);
+                BitonicSortComputeShader.SetInt("_Width", (int)matrixHeight);
+                BitonicSortComputeShader.SetInt("_Height", (int)matrixWidth);
+                
+                int kernelId = BitonicSortComputeShader.FindKernel("BitonicSort");
+                BitonicSortComputeShader.SetBuffer(kernelId, "_Data", SPHGrid);
+                BitonicSortComputeShader.Dispatch(kernelId, (int)(numElements / BitonicBlockSize), 1, 1);
             }
 
             // Then sort the rows and columns for the levels > than the block size
             // Transpose. Sort the Columns. Transpose. Sort the Rows.
-            for (uint level = (BlockSize << 1); level <= numParticles; level <<= 1)
+            for (uint level = (BitonicBlockSize << 1); level <= numElements; level <<= 1)
             {
                 int kernelId;
-
-                kernelId = BitonicSortComputeShader.FindKernel("BitonicSort");
-                BitonicSortComputeShader.SetInt("_Level", (int)(level / BlockSize));
-                BitonicSortComputeShader.SetInt("_LevelMask", (int)((level & ~numParticles) / BlockSize));
+                
+                // -------------------------------------------------------------------------------
+                BitonicSortComputeShader.SetInt("_Level", (int)(level / BitonicBlockSize));
+                BitonicSortComputeShader.SetInt("_LevelMask", (int)((level & ~numElements) / BitonicBlockSize));
                 BitonicSortComputeShader.SetInt("_Width", (int)matrixWidth);
                 BitonicSortComputeShader.SetInt("_Height", (int)matrixHeight);
-                BitonicSortComputeShader.Dispatch(kernelId, (int)(numParticles / BlockSize), 1, 1);
+                // -------------------------------------------------------------------------------
 
                 // Transpose the data from buffer 1 into buffer 2
                 kernelId = BitonicSortComputeShader.FindKernel("TransposeMatrix");
-                BitonicSortComputeShader.SetBuffer(kernelId, "_Data", GridTempWrite);
-                BitonicSortComputeShader.SetBuffer(kernelId, "_Input", GridRead);
-                BitonicSortComputeShader.Dispatch(kernelId, (int)(numParticles / BlockSize), (int)(numParticles / BlockSize), 1);
+                BitonicSortComputeShader.SetBuffer(kernelId, "_Data", tempBuffer);
+                BitonicSortComputeShader.SetBuffer(kernelId, "_Input", inBuffer);
+                BitonicSortComputeShader.Dispatch(kernelId, (int)(matrixWidth / TransposeBlockSize), (int)(matrixHeight / TransposeBlockSize), 1);
 
                 // Sort the transposed column data.
                 kernelId = BitonicSortComputeShader.FindKernel("BitonicSort");
-                BitonicSortComputeShader.Dispatch(kernelId, (int)(numParticles / BlockSize), 1, 1);
+                BitonicSortComputeShader.SetBuffer(kernelId, "_Data", tempBuffer);
+                BitonicSortComputeShader.Dispatch(kernelId, (int)(numElements / BitonicBlockSize), 1, 1);
+
+                // -------------------------------------------------------------------------------
+                BitonicSortComputeShader.SetInt("_Level", (int)(BitonicBlockSize));
+                BitonicSortComputeShader.SetInt("_LevelMask", (int)level);
+                BitonicSortComputeShader.SetInt("_Width", (int)matrixHeight);
+                BitonicSortComputeShader.SetInt("_Height", (int)matrixWidth);
+                // -------------------------------------------------------------------------------
 
                 // Transpose the data from buffer 2 back into buffer 1
                 kernelId = BitonicSortComputeShader.FindKernel("TransposeMatrix");
-                BitonicSortComputeShader.SetBuffer(kernelId, "_Data", GridWrite);
-                BitonicSortComputeShader.SetBuffer(kernelId, "_Input", GridTempRead);
-                BitonicSortComputeShader.Dispatch(kernelId, (int)(matrixHeight / BlockSize), (int)(matrixWidth / BlockSize), 1);
+                BitonicSortComputeShader.SetBuffer(kernelId, "_Data", inBuffer);
+                BitonicSortComputeShader.SetBuffer(kernelId, "_Input", tempBuffer);
+                BitonicSortComputeShader.Dispatch(kernelId, (int)(matrixHeight / TransposeBlockSize), (int)(matrixWidth / TransposeBlockSize), 1);
 
                 // Sort the row data
                 kernelId = BitonicSortComputeShader.FindKernel("BitonicSort");
-                BitonicSortComputeShader.Dispatch(kernelId, (int)(numElements / BlockSize), 1, 1);
+                BitonicSortComputeShader.SetBuffer(kernelId, "_Data", inBuffer);
+                BitonicSortComputeShader.Dispatch(kernelId, (int)(numElements / BitonicBlockSize), 1, 1);
             }
         }
 
         void InitializeComputeBuffers()
         {
+            SPHParticles        = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(Particle)));
+            SPHSortedParticles  = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(Particle)));
+            SPHParticlesForce   = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(ParticleForce)));
+            SPHParticlesDensity = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(ParticleDensity)));
+            SPHGrid             = new ComputeBuffer((int)numGrids,     Marshal.SizeOf(typeof(uint)));
+            SPHGridTemp         = new ComputeBuffer((int)numGrids,     Marshal.SizeOf(typeof(uint)));
+            SPHGridIndices      = new ComputeBuffer((int)numGrids,     Marshal.SizeOf(typeof(uint)) * 2);
+
+
+            int startingWidth = (int)Mathf.Sqrt(numParticles);
             Particle[] particles = new Particle[numParticles];
             for (int i = 0; i < numParticles; i++)
             {
-                float x = EmitPosition.x + ParticleInitGap + ParticleInitGap * (i % 128);
-                float y = EmitPosition.y + ParticleInitGap + ParticleInitGap * (i / 128);
-                particles[i].Position = new Vector2(x, y);
+                int x = i % startingWidth;
+                int y = Mathf.FloorToInt(i / (float)startingWidth);
+                particles[i].Position = new Vector2(ParticleInitGap * x, ParticleInitGap * y);
             }
 
-            ParticleForce[] particlesForce = new ParticleForce[numParticles];
-            ParticleDensity[] particlesDensity = new ParticleDensity[numParticles];
-
-            SPHParticlesRead = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(Particle)));
-            SPHParticlesWrite = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(Particle)));
-            SPHParticlesForce = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(ParticleForce)));
-            SPHParticlesDensity = new ComputeBuffer((int)numParticles, Marshal.SizeOf(typeof(ParticleDensity)));
-
-            SPHParticlesRead.SetData(particles);
-            SPHParticlesWrite.SetData(particles);
-            SPHParticlesForce.SetData(particlesForce);
-            SPHParticlesDensity.SetData(particlesDensity);
-
-            SPHGrid = new ComputeBuffer((int)numGrids, sizeof(uint));
-            SPHGridTemp = new ComputeBuffer((int)numGrids, sizeof(uint));
-            SPHGridIndices = new ComputeBuffer((int)numGrids, sizeof(uint) * 2);
-
-            uint[] grids = new uint[numGrids];
-            SPHGrid.SetData(grids);
-            SPHGridTemp.SetData(grids);
+            SPHParticles.SetData(particles);
         }
 
         void SetConstants()
@@ -384,11 +352,8 @@ namespace SPHFluid
             SPHComputeShader.SetFloat("_TimeStep", TimeStep);
             SPHComputeShader.SetFloat("_Viscosity", ViscosityCoef);
             SPHComputeShader.SetFloat("_WallStiffness", WallStiffness);
-            SPHComputeShader.SetFloat("_ParticleGap", ParticleInitGap);
             SPHComputeShader.SetVector("_Gravity", Gravity);
             SPHComputeShader.SetVector("_GridDim", GridDim);
-            SPHComputeShader.SetVector("_MinBoundary", MinBoundary);
-            SPHComputeShader.SetVector("_MaxBoundary", MaxBoundary);
             SPHComputeShader.SetInt("_MaxParticles", (int)numParticles);
             SPHComputeShader.SetFloat("_Poly6Kernel", Poly6Kernel);
             SPHComputeShader.SetFloat("_SpikeyKernel", SpikeyKernel);
@@ -401,8 +366,8 @@ namespace SPHFluid
             SPHGrid.Release();
             SPHGridTemp.Release();
             SPHGridIndices.Release();
-            SPHParticlesRead.Release();
-            SPHParticlesWrite.Release();
+            SPHParticles.Release();
+            SPHSortedParticles.Release();
             SPHParticlesForce.Release();
             SPHParticlesDensity.Release();
         }

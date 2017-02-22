@@ -1,7 +1,7 @@
 ## SPHFluid
 
-An experimental implementation of smoothed particle hydrodynamics (SPH) for Unity.
+An experimental implementation of smoothed particle hydrodynamics (SPH) on Unity.
 
-* Simple O(N^2) algorithm version
-* Optimized by shared memory O(N^2) version
-* Optimized by grid-based sorting version (unavailable)
+* Simple O(N^2) algorithm version (SPHFluid.unity)
+* Shared memory O(N^2) algorithm version (SPHFluidSharedMemory.unity)
+* Grid-based sorting algorithm version (SPHFluidSorted.unity)

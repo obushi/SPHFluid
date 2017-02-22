@@ -1,4 +1,5 @@
-## SPHFluid
+# SPHFluid
+![Screenshot](screenshot.gif)
 
 An experimental implementation of smoothed particle hydrodynamics (SPH) on Unity.
 

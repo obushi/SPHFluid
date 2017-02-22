@@ -34,11 +34,8 @@ cbuffer Constants
 	float  _TimeStep;
 	float  _Viscosity;
 	float  _WallStiffness;
-	float  _ParticleGap;
 	float4 _Gravity;
 	float4 _GridDim;
-	float2 _MinBoundary;
-	float2 _MaxBoundary;
 	uint   _MaxParticles;
 	float  _Poly6Kernel;
 	float  _SpikeyKernel;

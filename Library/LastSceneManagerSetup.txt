@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Scenes/SPHFluidSharedMemory.unity
+- path: Assets/Scenes/SPHFluidSorted.unity
   isLoaded: 1
   isActive: 1

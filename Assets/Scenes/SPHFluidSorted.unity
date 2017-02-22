@@ -1,15 +1,15 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!29 &1
-SceneSettings:
+OcclusionCullingSettings:
   m_ObjectHideFlags: 0
-  m_PVSData: 
-  m_PVSObjectsArray: []
-  m_PVSPortalsArray: []
+  serializedVersion: 2
   m_OcclusionBakeSettings:
     smallestOccluder: 5
     smallestHole: 0.25
     backfaceThreshold: 100
+  m_SceneGUID: 00000000000000000000000000000000
+  m_OcclusionCullingData: {fileID: 0}
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44692558, g: 0.49678743, b: 0.57508624, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -79,30 +79,32 @@ NavMeshSettings:
   m_ObjectHideFlags: 0
   m_BuildSettings:
     serializedVersion: 2
+    agentTypeID: 0
     agentRadius: 0.5
     agentHeight: 2
     agentSlope: 45
     agentClimb: 0.4
     ledgeDropHeight: 0
     maxJumpAcrossDistance: 0
-    accuratePlacement: 0
     minRegionArea: 2
-    cellSize: 0.16666667
     manualCellSize: 0
+    cellSize: 0.16666667
+    accuratePlacement: 0
   m_NavMeshData: {fileID: 0}
 --- !u!1 &188288908
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 188288913}
-  - 20: {fileID: 188288912}
-  - 92: {fileID: 188288911}
-  - 124: {fileID: 188288910}
-  - 81: {fileID: 188288909}
-  - 114: {fileID: 188288914}
+  - component: {fileID: 188288913}
+  - component: {fileID: 188288912}
+  - component: {fileID: 188288911}
+  - component: {fileID: 188288910}
+  - component: {fileID: 188288909}
+  - component: {fileID: 188288914}
+  - component: {fileID: 188288915}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -139,8 +141,8 @@ Camera:
   m_GameObject: {fileID: 188288908}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -172,12 +174,12 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 188288908}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.5, y: 1, z: -2}
+  m_LocalPosition: {x: 1.5, y: 1.5, z: -3}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &188288914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -190,15 +192,53 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   focusObj: {fileID: 0}
+--- !u!114 &188288915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 188288908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fceaeb339b971b429c4cc600acabd13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tweakMode: 0
+  screenBlendMode: 1
+  hdr: 0
+  sepBlurSpread: 0.1
+  quality: 1
+  bloomIntensity: 0.5
+  bloomThreshold: -0.05
+  bloomThresholdColor: {r: 1, g: 1, b: 1, a: 1}
+  bloomBlurIterations: 2
+  hollywoodFlareBlurIterations: 2
+  flareRotation: 0
+  lensflareMode: 1
+  hollyStretchWidth: 2.5
+  lensflareIntensity: 0
+  lensflareThreshold: 0.3
+  lensFlareSaturation: 0.75
+  flareColorA: {r: 0.4, g: 0.4, b: 0.8, a: 0.75}
+  flareColorB: {r: 0.4, g: 0.8, b: 0.8, a: 0.75}
+  flareColorC: {r: 0.8, g: 0.4, b: 0.8, a: 0.75}
+  flareColorD: {r: 0.8, g: 0.4, b: 0, a: 0.75}
+  lensFlareVignetteMask: {fileID: 2800000, guid: 95ef4804fe0be4c999ddaa383536cde8,
+    type: 3}
+  lensFlareShader: {fileID: 4800000, guid: 459fe69d2f6d74ddb92f04dbf45a866b, type: 3}
+  screenBlendShader: {fileID: 4800000, guid: 7856cbff0a0ca45c787d5431eb805bb0, type: 3}
+  blurAndFlaresShader: {fileID: 4800000, guid: be6e39cf196f146d5be72fbefb18ed75, type: 3}
+  brightPassFilterShader: {fileID: 4800000, guid: 0aeaa4cb29f5d4e9c8455f04c8575c8c,
+    type: 3}
 --- !u!1 &1603487271
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 1603487273}
-  - 108: {fileID: 1603487272}
+  - component: {fileID: 1603487273}
+  - component: {fileID: 1603487272}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -249,19 +289,19 @@ Transform:
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
 --- !u!1 &2102169120
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 2102169122}
-  - 114: {fileID: 2102169121}
+  - component: {fileID: 2102169122}
+  - component: {fileID: 2102169121}
   m_Layer: 0
   m_Name: SPHFluidSorted
   m_TagString: Untagged
@@ -283,23 +323,25 @@ MonoBehaviour:
   SPHComputeShader: {fileID: 7200000, guid: 8ad5f50222005b8458da2abfa4d992ab, type: 3}
   BitonicSortComputeShader: {fileID: 7200000, guid: b376bbeb20cdc4941a64f4b78545bf95,
     type: 3}
-  particleTexture: {fileID: 2800000, guid: bb29f17681fd1fd47914242735e5da18, type: 3}
+  particleTexture: {fileID: 10300, guid: 0000000000000000f000000000000000, type: 0}
+  backRenderTexture: {fileID: 0}
   particleRenderShader: {fileID: 4800000, guid: 0943c3bd82e6c0947854025a0483b6c3,
     type: 3}
   RestDensity: 1000
-  PressureCoef: 200
+  PressureCoef: 300
   Mass: 0.0002
   EffectiveRadius: 0.012
-  TimeStep: 0.005
-  ViscosityCoef: 0.1
-  ParticleRadius: 0.003
+  TimeStep: 0.004
+  ViscosityCoef: 0.2
+  ParticleRadius: 0.005
   WallStiffness: 10000
   ParticleInitGap: 0.0045
-  Gravity: {x: 0, y: -9.8}
+  contourMinThreshold: 0.5
+  contourMaxThreshold: 0.9
+  Gravity: {x: 0, y: -1.5}
   MinBoundary: {x: 0, y: 0}
   MaxBoundary: {x: 3, y: 3}
   EmitPosition: {x: 0, y: 0}
-  numParticles: 131072
 --- !u!4 &2102169122
 Transform:
   m_ObjectHideFlags: 0
@@ -307,9 +349,9 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2102169120}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.2523149, y: 0.9705763, z: 4.8295803}
+  m_LocalPosition: {x: 4.5, y: 1.5, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

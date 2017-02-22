@@ -22777,6 +22777,11 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
         <para>iPod Touch, fifth generation.</para>
       </summary>
     </member>
+    <member name="F:UnityEngine.iOS.DeviceGeneration.iPodTouch6Gen">
+      <summary>
+        <para>iPod Touch, sixth generation.</para>
+      </summary>
+    </member>
     <member name="F:UnityEngine.iOS.DeviceGeneration.iPodTouchUnknown">
       <summary>
         <para>Yet unknown iPod Touch.</para>
@@ -26713,10 +26718,19 @@ Only usable on Android, Windows Phone or Windows Tablets.</para>
     </member>
     <member name="M:UnityEngine.Material.SetBuffer(System.String,UnityEngine.ComputeBuffer)">
       <summary>
-        <para>Set a ComputeBuffer value.</para>
+        <para>Set a named ComputeBuffer value.</para>
       </summary>
-      <param name="propertyName"></param>
-      <param name="buffer"></param>
+      <param name="nameID">Property name ID, use Shader.PropertyToID to get it.</param>
+      <param name="name">Property name.</param>
+      <param name="value">ComputeBuffer value to set.</param>
+    </member>
+    <member name="M:UnityEngine.Material.SetBuffer(System.Int32,UnityEngine.ComputeBuffer)">
+      <summary>
+        <para>Set a named ComputeBuffer value.</para>
+      </summary>
+      <param name="nameID">Property name ID, use Shader.PropertyToID to get it.</param>
+      <param name="name">Property name.</param>
+      <param name="value">ComputeBuffer value to set.</param>
     </member>
     <member name="M:UnityEngine.Material.SetColor(System.String,UnityEngine.Color)">
       <summary>
@@ -39544,11 +39558,6 @@ See Also: ReflectionProbeTimeSlicingMode.</para>
         <para>Shader used for screen-space cascaded shadows.</para>
       </summary>
     </member>
-    <member name="F:UnityEngine.Rendering.BuiltinShaderType.Sprite">
-      <summary>
-        <para>Default shader used by sprites.</para>
-      </summary>
-    </member>
     <member name="T:UnityEngine.Rendering.CameraEvent">
       <summary>
         <para>Defines a place in camera's rendering to attach Rendering.CommandBuffer objects to.</para>
@@ -40660,7 +40669,7 @@ See Also: ReflectionProbe.RenderProbe.</para>
     </member>
     <member name="F:UnityEngine.Rendering.ReflectionProbeRefreshMode.ViaScripting">
       <summary>
-        <para>Using this option indicates that the probe will never be automatically updated by Unity. This is useful if you wish to completely control the probe refresh behavior via scripting.
+        <para>Using this option indicates that the probe will never be automatically updated by Unity while a game is running. This is useful if you wish to completely control the probe refresh behavior via scripting.
 
 See Also: ReflectionProbe.RenderProbe.</para>
       </summary>

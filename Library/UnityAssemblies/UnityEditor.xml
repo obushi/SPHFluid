@@ -11406,6 +11406,11 @@ This value is the number of screen pixels per point of interface space. For inst
         <para>Is build script only enabled.</para>
       </summary>
     </member>
+    <member name="P:UnityEditor.EditorUserBuildSettings.compressFilesInPackage">
+      <summary>
+        <para>Compress files in package.</para>
+      </summary>
+    </member>
     <member name="P:UnityEditor.EditorUserBuildSettings.compressWithPsArc">
       <summary>
         <para>Build data compressed with PSArc.</para>
@@ -17437,6 +17442,11 @@ If the target name is in the provided list of existing names, a unique name is g
         <para>Set this property with your Apple Developer Team ID. You can find this on the Apple Developer website under &lt;a href="https:developer.apple.comaccount#membership"&gt; Account &gt; Membership &lt;/a&gt; . This sets the Team ID for the generated Xcode project, allowing developers to use the Build and Run functionality. An Apple Developer Team ID must be set here for automatic signing of your app.</para>
       </summary>
     </member>
+    <member name="P:UnityEditor.PlayerSettings.iOS.appleEnableAutomaticSigning">
+      <summary>
+        <para>Set this property to true for Xcode to attempt to automatically sign your app based on your appleDeveloperTeamID.</para>
+      </summary>
+    </member>
     <member name="P:UnityEditor.PlayerSettings.iOS.applicationDisplayName">
       <summary>
         <para>iOS application display name.</para>
@@ -17465,6 +17475,11 @@ If the target name is in the provided list of existing names, a unique name is g
     <member name="P:UnityEditor.PlayerSettings.iOS.forceHardShadowsOnMetal">
       <summary>
         <para>Should hard shadows be enforced when running on (mobile) Metal.</para>
+      </summary>
+    </member>
+    <member name="P:UnityEditor.PlayerSettings.iOS.iOSManualProvisioningProfileID">
+      <summary>
+        <para>A provisioning profile Universally Unique Identifier (UUID) that Xcode will use to build your iOS app in Manual Signing mode.</para>
       </summary>
     </member>
     <member name="P:UnityEditor.PlayerSettings.iOS.locationUsageDescription">
@@ -17530,6 +17545,11 @@ If the target name is in the provided list of existing names, a unique name is g
     <member name="P:UnityEditor.PlayerSettings.iOS.targetOSVersionString">
       <summary>
         <para>Deployment minimal version of iOS.</para>
+      </summary>
+    </member>
+    <member name="P:UnityEditor.PlayerSettings.iOS.tvOSManualProvisioningProfileID">
+      <summary>
+        <para>A provisioning profile Universally Unique Identifier (UUID) that Xcode will use to build your tvOS app in Manual Signing mode.</para>
       </summary>
     </member>
     <member name="P:UnityEditor.PlayerSettings.iOS.useOnDemandResources">

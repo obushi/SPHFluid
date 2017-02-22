@@ -219,6 +219,15 @@
         <para>Returns true if the player was successfully destoyed and removed.</para>
       </returns>
     </member>
+    <member name="M:UnityEngine.Networking.ClientScene.SendReconnectMessage(UnityEngine.Networking.MessageBase)">
+      <summary>
+        <para>Send a reconnect message to the new host, used during host migration.</para>
+      </summary>
+      <param name="extraMessage">Any extra data to send.</param>
+      <returns>
+        <para>Returns true if the send succeeded.</para>
+      </returns>
+    </member>
     <member name="M:UnityEngine.Networking.ClientScene.SetLocalObject">
       <summary>
         <para>NetId is a unique number assigned to all objects with NetworkIdentity components in a game.</para>
